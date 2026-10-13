@@ -1,7 +1,7 @@
 # Architecture
 
 This document describes how the FPGA Minesweeper is put together: the data it keeps, the
-state machines that change it, how a frame is drawn, and how the design is tested.
+state machines that change it, and how a frame is drawn.
 
 - [Overview](#overview)
 - [Game state](#game-state)
@@ -11,7 +11,6 @@ state machines that change it, how a frame is drawn, and how the design is teste
 - [Pixel pipeline](#pixel-pipeline)
 - [Keyboard](#keyboard)
 - [Clocks and reset](#clocks-and-reset)
-- [Verification](#verification)
 - [Things that went wrong along the way](#things-that-went-wrong-along-the-way)
 
 ## Overview
@@ -239,40 +238,6 @@ two meet.
 `KEY0` is an asynchronous active-low reset for the game state, the cursor and the pixel
 pipeline.
 
-## Verification
-
-```mermaid
-flowchart LR
-    PY[Python test script] -->|key presses| TB[Test bench]
-    TB -->|scan codes| DUT[Design under test]
-    DUT --> FBM[Frame buffer model] -->|image| CMP
-    DUT -->|board, revealed, flags, cursor, LEDs| CMP[Compare]
-    PY --> GM[Golden model<br>of the rules] --> CMP
-    CMP --> R[Pass or fail]
-```
-
-The design is simulated with Icarus Verilog. Two vendor blocks are swapped for simulation
-models: the PS/2 receiver becomes a block that delivers whatever scan codes the test asks
-for, and the VGA adapter becomes a plain frame buffer that can be written out as an image.
-The block memory holding the digit images is modelled with the same one-clock delay as the
-real part. Everything else is the real design.
-
-A Python script generates the key presses, runs the simulation, and compares the result
-with a separate implementation of the rules.
-
-| Area | What is checked |
-|---|---|
-| Board generation | Neighbour counts are correct on 12 boards. A mine is no more likely directly after another mine than anywhere else. |
-| Play | 560 random moves, reveals and flags over 4 boards, with the full game state compared after every step. |
-| Winning | Opening every safe tile reveals exactly the safe tiles, lights the win LED, and the game cannot then be lost. |
-| Losing | A mine ends the game, shows every mine, lights the game-over LED and freezes the board. `Esc` starts a different board. |
-| Flags | Toggle, cannot reveal a flagged tile, cannot flag a revealed tile, cleared by a new game. |
-| Keyboard | A key pressed after releasing an unused key still registers. Holding `Space` reveals once. Holding a movement key keeps moving. |
-| Reset | `KEY0` clears everything. `Esc` during board generation still gives a valid board. Nothing can be revealed before the first board exists. |
-| Picture | A rendered frame matches the expected image pixel for pixel. Every number has a visible digit image. |
-
-All 22 checks pass. The images in this repository come from the same frame buffer model.
-
 ## Things that went wrong along the way
 
 **A flood fill that stopped early.** The first version checked all eight neighbours in a
@@ -289,8 +254,7 @@ mine half the time and the board filled with horizontal runs. Giving each tile i
 bits made the layout look random.
 
 **Digits one pixel off.** The digit ROMs answer one clock late. Without the extra pipeline
-stage each digit was drawn one pixel to the right of where it belonged. Comparing a
-simulated frame with the expected image pixel by pixel is what caught it.
+stage each digit was drawn one pixel to the right of where it belonged.
 
 **A swallowed key press.** Releasing a key the game does not use left the decoder waiting
 for the second half of a release, so it mistook the next real key press for one.

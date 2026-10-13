@@ -10,8 +10,7 @@ Built for ECE241 (Digital Systems) at the University of Toronto, Fall 2025.
   <img src="media/gameplay.gif" alt="A full game played from the first move to a cleared board" width="540">
 </p>
 
-<p align="center"><em>A full game, first move to cleared board. Every frame is the contents of the
-design's VGA frame buffer, captured from a simulation of the hardware and cropped to the board.</em></p>
+<p align="center"><em>A full game, first move to cleared board.</em></p>
 
 ## What it does
 
@@ -87,26 +86,13 @@ act once per press, while the reveal, flag and new-game keys are followed down a
 
 The full design is described in [architecture.md](architecture.md).
 
-## Verification
-
-The design is tested in simulation against a model of the rules written in Python. The
-test bench replaces the keyboard receiver with one that injects scan codes and replaces
-the VGA adapter with a frame buffer that can be saved as an image, so tests can type keys
-and look at the screen.
-
-- 22 checks covering board generation, play, flags, win and loss, the keyboard and reset
-- 560 randomly generated moves compared step by step with the model
-- A rendered frame compared pixel for pixel with the expected image
-
-Details are in [architecture.md](architecture.md#verification).
-
 ## Hardware
 
 | | |
 |---|---|
 | Board | Terasic DE1-SoC |
 | FPGA | Intel Cyclone V `5CSEMA5F31C6` |
-| Tools | Quartus Prime 18.1 Lite, Icarus Verilog for simulation |
+| Tools | Quartus Prime 18.1 Lite |
 | Display | 640 x 480 VGA, 9-bit colour |
 | Input | PS/2 keyboard |
 
